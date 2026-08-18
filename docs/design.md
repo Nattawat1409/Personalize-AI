@@ -1,6 +1,6 @@
 ```mermaid
 flowchart TD
-    start([User Query]) --> profile[Load user_profile.md]
+    start([User Query]) -->|load from current content| profile[Load user_profile.md]
     start --> t1{Search topics_index}
     
     t1 -->|Match found| read[Read specific topic .md]
