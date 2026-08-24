@@ -7,9 +7,6 @@ requires-python = ">=3.12"
 dependencies = [
     "langchain-core>=0.3",
     "langchain-openai>=0.2",
-    "pandas>=2.2",
-    "psycopg2-binary>=2.9",
+    "langgraph>=1.2.11",
     "python-dotenv>=1.0",
-    "sqlalchemy>=2.0",
-    "streamlit>=1.40",
 ]

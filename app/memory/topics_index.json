@@ -1,0 +1,82 @@
+{
+  "version": 2,
+  "topics": [
+    {
+      "id": "cement-production-process",
+      "title": "Cement Production Process",
+      "category": "business_logic",
+      "path": "business_logic/cement-production-process.md",
+      "one_liner": "The process of manufacturing cement from raw materials to the final product.",
+      "keywords": [],
+      "created_at": "2026-08-23T14:56:52Z",
+      "updated_at": "2026-08-23T15:51:06Z",
+      "turn_count": 3
+    },
+    {
+      "id": "concrete-mix-ratios",
+      "title": "Concrete Mix Ratios",
+      "category": "business_logic",
+      "path": "business_logic/concrete-mix-ratios.md",
+      "one_liner": "Explains the components of concrete and provides common mix ratios and factors influencing them for different applications.",
+      "keywords": [],
+      "created_at": "2026-08-23T14:57:03Z",
+      "updated_at": "2026-08-23T14:57:03Z",
+      "turn_count": 1
+    },
+    {
+      "id": "bangkok-weather",
+      "title": "Bangkok Weather",
+      "category": "general",
+      "path": "general/bangkok-weather.md",
+      "one_liner": "The user asked about today's weather in Bangkok.",
+      "keywords": [],
+      "created_at": "2026-08-23T14:57:10Z",
+      "updated_at": "2026-08-23T14:57:10Z",
+      "turn_count": 1
+    },
+    {
+      "id": "python-for-loops",
+      "title": "Python For-Loops",
+      "category": "python_topic",
+      "path": "python_topic/python-for-loops.md",
+      "one_liner": "Explains the syntax and common uses of for-loops in Python for iterating over sequences and other iterables.",
+      "keywords": [],
+      "created_at": "2026-08-23T14:57:22Z",
+      "updated_at": "2026-08-23T14:57:22Z",
+      "turn_count": 1
+    },
+    {
+      "id": "python-exception-handling",
+      "title": "Python Exception Handling",
+      "category": "python_topic",
+      "path": "python_topic/python-exception-handling.md",
+      "one_liner": "Learn how to use try, except, else, and finally blocks to catch and handle errors in Python programs gracefully.",
+      "keywords": [],
+      "created_at": "2026-08-23T14:57:38Z",
+      "updated_at": "2026-08-23T14:57:38Z",
+      "turn_count": 1
+    },
+    {
+      "id": "scg-business-units",
+      "title": "SCG Business Units",
+      "category": "business_logic",
+      "path": "business_logic/scg-business-units.md",
+      "one_liner": "SCG operates through three main business units: Cement-Building Materials, Chemicals, and Packaging.",
+      "keywords": [],
+      "created_at": "2026-08-23T14:57:45Z",
+      "updated_at": "2026-08-23T14:57:45Z",
+      "turn_count": 1
+    },
+    {
+      "id": "javascript-for-loops",
+      "title": "JavaScript For Loops",
+      "category": "general",
+      "path": "general/javascript-for-loops.md",
+      "one_liner": "Explains how to write different types of for loops in JavaScript, including traditional, for...of, and for...in loops.",
+      "keywords": [],
+      "created_at": "2026-08-23T14:57:59Z",
+      "updated_at": "2026-08-23T14:57:59Z",
+      "turn_count": 1
+    }
+  ]
+}

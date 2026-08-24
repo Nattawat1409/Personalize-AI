@@ -30,12 +30,14 @@ flowchart TD
 
 ```
 memory/
-  topics_index.json          # topic -> {file, category, keywords/embedding}
+  topics_index.json          # topic -> {file, category, one_liner, keywords}
   user_profile.md            # MD1 — single file, always loaded
   business_logic/
-    *.md                     # MD2 — one file per strategy/business-logic topic
-  knowledge/
-    *.md                     # MD3 — one file per subject/technique topic
+    *.md                     # MD2 — SCG company + SCG's industrial domains
+  python_topic/
+    *.md                     # MD3 — Python programming topics only
+  general/
+    *.md                     # MD4 — everything else
 ```
 
 `topics_index.json` is what `search_memory` checks first — it's the router, so the

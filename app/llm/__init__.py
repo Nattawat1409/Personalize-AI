@@ -1,4 +1,4 @@
-from llm.client import llm
+from .llm import llm
 
 __all__ = [
     "llm"
