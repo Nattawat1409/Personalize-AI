@@ -6,7 +6,14 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
-from app.config import CATEGORIES, MEMORY_ROOT, TOPICS_INDEX_PATH, USER_PROFILE_PATH
+from app.config import (
+    CATEGORIES,
+    KEYWORDS_MAX,
+    MEMORY_ROOT,
+    SOURCES_TOP_K,
+    TOPICS_INDEX_PATH,
+    USER_PROFILE_PATH,
+)
 
 USER_PROFILE_TEMPLATE = """---
 updated_at: null
@@ -49,7 +56,11 @@ def load_index() -> dict:
 
 
 def save_index(index: dict) -> None:
-    _atomic_write(TOPICS_INDEX_PATH, json.dumps(index, indent=2, ensure_ascii=False) + "\n")
+    # indent=1 keeps the file compact (~8% smaller than indent=2) while staying
+    # readable and line-diffable. The {"version", "topics"} wrapper is kept on
+    # purpose: `version` is what lets a future format change be detected and
+    # migrated — dropping it saves only ~3% and costs that ability.
+    _atomic_write(TOPICS_INDEX_PATH, json.dumps(index, indent=1, ensure_ascii=False) + "\n")
 
 
 def find_topic(index: dict, topic_id: str) -> Optional[dict]:
@@ -60,11 +71,40 @@ def find_topic(index: dict, topic_id: str) -> Optional[dict]:
 
 
 def render_index_for_router(index: dict) -> str:
+    """Compact topic list for the router prompt.
+
+    Keywords are included when present: they carry specific terms (product
+    codes, domain jargon) that a one-line description tends to smooth over.
+    Omitted entirely when empty so older entries add no prompt noise.
+    """
     lines = []
     for t in index["topics"]:
         lines.append(f"[{t['id']}] ({t['category']}) {t['title']}")
         lines.append(f"    {t['one_liner']}")
+        kws = t.get("keywords") or []
+        if kws:
+            lines.append(f"    keywords: {', '.join(kws[:KEYWORDS_MAX])}")
     return "\n".join(lines) if lines else "(no topics recorded yet)"
+
+
+def merge_keywords(existing: list[str], new: list[str]) -> list[str]:
+    """Union, case-insensitive, order-preserving, capped at KEYWORDS_MAX.
+
+    Existing keywords come first: a topic's established vocabulary is more
+    reliable than terms inferred from a single new turn.
+    """
+    merged: list[str] = []
+    seen: set[str] = set()
+    for k in [*existing, *new]:
+        k = (k or "").strip()
+        low = k.lower()
+        if not k or low in seen:
+            continue
+        seen.add(low)
+        merged.append(k)
+        if len(merged) >= KEYWORDS_MAX:
+            break
+    return merged
 
 
 # --- user_profile.md -------------------------------------------------------
@@ -137,8 +177,54 @@ turn_count: {turn_count}
 """
 
 
-def _make_log_entry(query: str, answer: str) -> str:
-    return f"### {_now()}\n**Q:** {query}\n**A (key points):**\n- {answer}"
+def _format_source(s: dict) -> str:
+    """One citation line.
+
+    Humans read `title` + `version`; the machine key is `doc_uid`, which stays
+    stable when a document is edited. `content_hash` is deliberately NOT shown —
+    it identifies one revision, not the document, and is only used to decide
+    whether re-indexing is needed.
+    """
+    label = s.get("title") or s.get("source_path") or "(untitled)"
+    bits = [label]
+    if s.get("version"):
+        bits.append(f"v{s['version']}")
+    if s.get("doc_uid"):
+        bits.append(f"`{s['doc_uid']}`")
+    if s.get("score") is not None:
+        bits.append(f"score={s['score']:.2f}")
+    return "  - " + " — ".join(bits)
+
+
+def _make_log_entry(query: str, answer: str, sources: list[dict] | None = None) -> str:
+    entry = f"### {_now()}\n**Q:** {query}\n**A (key points):**\n- {answer}"
+    if sources:
+        lines = "\n".join(_format_source(s) for s in sources[:SOURCES_TOP_K])
+        entry += f"\n**Sources:**\n{lines}"
+    return entry
+
+
+def merge_sources(existing: list[dict], new: list[dict]) -> list[dict]:
+    """Union by doc_uid, newest first, capped at SOURCES_TOP_K.
+
+    Deduping on doc_uid (not content_hash) is deliberate: when a document is
+    edited its content_hash changes but it is still the same document, so two
+    revisions must collapse to one citation — the newer one wins.
+
+    Index-level sources are a display shortcut only. The authoritative
+    per-turn record lives in the topic .md conversation log.
+    """
+    merged: list[dict] = []
+    seen: set[str] = set()
+    for s in [*new, *existing]:
+        key = s.get("doc_uid") or s.get("source_path")
+        if not key or key in seen:
+            continue
+        seen.add(key)
+        merged.append(s)
+        if len(merged) >= SOURCES_TOP_K:
+            break
+    return merged
 
 
 def extract_topic_sections(content: str) -> tuple[str, str]:
@@ -162,10 +248,14 @@ def create_topic(
     summary: str,
     query: str,
     answer: str,
+    sources: list[dict] | None = None,
+    keywords: list[str] | None = None,
 ) -> tuple[str, str]:
     if category not in CATEGORIES:
         raise ValueError(f"invalid category: {category!r}, must be one of {CATEGORIES}")
 
+    sources = (sources or [])[:SOURCES_TOP_K]
+    keywords = merge_keywords([], keywords or [])
     index = load_index()
     topic_id = unique_topic_id(index, slugify(title))
     path_str = f"{category}/{topic_id}.md"
@@ -177,7 +267,7 @@ def create_topic(
         category=category,
         one_liner=one_liner,
         summary=summary,
-        log_entries=[_make_log_entry(query, answer)],
+        log_entries=[_make_log_entry(query, answer, sources)],
         turn_count=1,
         created_at=now,
         updated_at=now,
@@ -191,7 +281,8 @@ def create_topic(
             "category": category,
             "path": path_str,
             "one_liner": one_liner,
-            "keywords": [],
+            "keywords": keywords,
+            "sources": sources,
             "created_at": now,
             "updated_at": now,
             "turn_count": 1,
@@ -226,14 +317,24 @@ def _split_topic_md(content: str) -> tuple[dict, str, list[str]]:
     return fm, summary, entries
 
 
-def append_topic(path_str: str, query: str, answer: str, compress_at_chars: int, llm_compress) -> dict:
+def append_topic(
+    path_str: str,
+    query: str,
+    answer: str,
+    compress_at_chars: int,
+    llm_compress,
+    sources: list[dict] | None = None,
+    keywords: list[str] | None = None,
+) -> dict:
     """llm_compress(full_text) -> (new_summary, new_one_liner) is called only when
     the file exceeds compress_at_chars."""
+    sources = (sources or [])[:SOURCES_TOP_K]
+    keywords = keywords or []
     path = MEMORY_ROOT / path_str
     content = path.read_text(encoding="utf-8")
     fm, summary, entries = _split_topic_md(content)
 
-    entries.append(_make_log_entry(query, answer))
+    entries.append(_make_log_entry(query, answer, sources))
     turn_count = int(fm.get("turn_count", len(entries))) + 1
     now = _now()
 
@@ -259,14 +360,25 @@ def append_topic(path_str: str, query: str, answer: str, compress_at_chars: int,
 
     index = load_index()
     entry = find_topic(index, fm.get("id", ""))
+    merged_keywords = None
     if entry is not None:
         entry["updated_at"] = now
         entry["turn_count"] = turn_count
+        if sources:
+            entry["sources"] = merge_sources(entry.get("sources", []), sources)
+        if keywords:
+            merged_keywords = merge_keywords(entry.get("keywords", []), keywords)
+            entry["keywords"] = merged_keywords
         if compressed:
             entry["one_liner"] = one_liner
         save_index(index)
 
-    return {"compressed": compressed, "turn_count": turn_count, "one_liner": one_liner}
+    return {
+        "compressed": compressed,
+        "turn_count": turn_count,
+        "one_liner": one_liner,
+        "keywords": merged_keywords,
+    }
 
 
 # --- user profile update ---------------------------------------------------

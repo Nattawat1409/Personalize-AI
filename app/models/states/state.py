@@ -24,12 +24,19 @@ class State(TypedDict, total=False):
     messages: Annotated[list[AnyMessage], add_messages]
     answer: str
 
+    # KM documents cited for this turn, max SOURCES_TOP_K.
+    # v1 (POC) has no KM ingestion, so this is always [] — writing anything here
+    # without real retrieval would be a fabricated citation.
+    # v2 fills it from the rerank stage. See docs/ARCHITECTURE.md §5.1
+    sources: list[dict]
+
     # --- memory write ---
     memory_action: Literal["skip", "append", "create", "profile"]
     memory_category: Category
     topic_title: str
     topic_one_liner: str
     topic_summary: str
+    topic_keywords: list[str]
     profile_update: str
 
     # --- observability ---

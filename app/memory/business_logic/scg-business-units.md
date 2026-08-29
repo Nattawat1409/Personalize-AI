@@ -4,8 +4,8 @@ title: SCG Business Units
 category: business_logic
 one_liner: SCG operates through three main business units: Cement-Building Materials, Chemicals, and Packaging.
 created_at: 2026-08-23T14:57:45Z
-updated_at: 2026-08-23T14:57:45Z
-turn_count: 1
+updated_at: 2026-08-24T10:10:57Z
+turn_count: 3
 ---
 
 ## Summary
@@ -24,3 +24,19 @@ SCG primarily operates through three main business units: SCG Cement-Building Ma
 3.  **SCG Packaging (SCGP)**: This unit specializes in integrated packaging solutions, including pulp, paper, and various types of packaging products.
 
 While they have other supporting businesses and ventures (like SCG Logistics, SCG International, and various digital or innovation-focused initiatives), these three are the core, large-scale business units that define SCG's primary operations.
+
+### 2026-08-24T10:03:51Z
+**Q:** What did we talk about regarding SCG's business units?
+**A (key points):**
+- Last time we discussed SCG's business, we talked about its three main units:
+
+*   **SCG Cement-Building Materials:** This unit handles cement, concrete, aggregates, and other building products.
+*   **SCG Chemicals (SCGC):** They produce petrochemicals like olefins and polyolefins.
+*   **SCG Packaging (SCGP):** This unit focuses on pulp, paper, and integrated packaging solutions.
+
+### 2026-08-24T10:10:57Z
+**Q:** Does SCG have any operations outside Thailand?
+**A (key points):**
+- My notes from our previous conversation on SCG focused on its main business units. They don't specify whether SCG operates outside Thailand.
+
+However, based on general knowledge, **yes, SCG does have significant operations outside Thailand.** They have a strong presence across ASEAN (Southeast Asia) and other regions.

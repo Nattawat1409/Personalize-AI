@@ -8,6 +8,8 @@ def create_md(state: State) -> dict:
     if category not in CATEGORIES:
         category = "general"
 
+    sources = state.get("sources") or []
+    keywords = state.get("topic_keywords") or []
     topic_id, path = create_topic(
         title=state.get("topic_title") or state["query"][:60],
         category=category,
@@ -15,8 +17,13 @@ def create_md(state: State) -> dict:
         summary=state.get("topic_summary") or state["answer"],
         query=state["query"],
         answer=state["answer"],
+        sources=sources,
+        keywords=keywords,
     )
 
     return {
-        "trace": [f"create_md: created '{path}' (id={topic_id}, category={category})"],
+        "trace": [
+            f"create_md: created '{path}' (id={topic_id}, category={category}, "
+            f"keywords={len(keywords)}, sources={len(sources)})"
+        ],
     }

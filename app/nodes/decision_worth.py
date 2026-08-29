@@ -102,8 +102,17 @@ Given the user's question and the answer given, decide ONE action:
 If action is "append" or "create", also provide: category (one of
 business_logic / python_topic / general, following the rules above), title (a
 short topic title), one_liner (one sentence describing the topic, used later
-by a router to match future questions to it), and summary (2-4 sentences
-capturing what was learned this turn, written so it stands alone).
+by a router to match future questions to it), summary (2-4 sentences
+capturing what was learned this turn, written so it stands alone), and
+keywords.
+
+Keywords: 3-6 SPECIFIC terms a future question on this topic would likely
+contain — domain jargon, product names, technical identifiers, error names.
+They exist to catch questions the one-line description would miss, so:
+- DO use concrete terms: "clinker", "kiln", "gypsum", "try/except", "traceback"
+- DO NOT use generic words already implied by the title: "process", "how to",
+  "explanation", "python", "information"
+Lowercase, single words or short phrases, no duplicates of the title itself.
 
 If action is "profile", provide profile_update: a short sentence to merge into
 the user's profile.
@@ -116,6 +125,10 @@ class Decision(BaseModel):
     title: Optional[str] = None
     one_liner: Optional[str] = None
     summary: Optional[str] = None
+    keywords: list[str] = Field(
+        default_factory=list,
+        description="3-6 specific terms a future question on this topic would contain.",
+    )
     profile_update: Optional[str] = None
     low_confidence: bool = Field(
         default=False, description="true if the category call was genuinely uncertain"
@@ -150,6 +163,9 @@ def decision_worth(state: State) -> dict:
         result["topic_title"] = decision.title or state["query"][:60]
         result["topic_one_liner"] = decision.one_liner or ""
         result["topic_summary"] = decision.summary or ""
+        result["topic_keywords"] = decision.keywords or []
+        if decision.keywords:
+            trace.append(f"decision_worth: keywords={', '.join(decision.keywords)}")
     elif action == "profile":
         result["profile_update"] = decision.profile_update or ""
 

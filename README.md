@@ -1,5 +1,5 @@
 # Purpose #
-- research for AI personalize feature to optimize the operation workflow of CIMIE and memorize the user personalize and frequently question by my vary user 
+- research for AI personalize feature to optimize the operation workflow of CIMIE and memorize the user personalize and frequently question by my vary user and 
 
 # workflow #
 flowchart TD

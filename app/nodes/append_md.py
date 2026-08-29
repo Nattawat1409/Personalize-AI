@@ -30,15 +30,24 @@ def _llm_compress(full_text: str) -> tuple[str, str]:
 
 def append_md(state: State) -> dict:
     path = state["matched_topic_path"]
+    sources = state.get("sources") or []
+    keywords = state.get("topic_keywords") or []
     result = append_topic(
         path_str=path,
         query=state["query"],
         answer=state["answer"],
         compress_at_chars=COMPRESS_AT_CHARS,
         llm_compress=_llm_compress,
+        sources=sources,
+        keywords=keywords,
     )
 
-    trace_line = f"append_md: appended to '{path}', turn_count={result['turn_count']}"
+    trace_line = (
+        f"append_md: appended to '{path}', turn_count={result['turn_count']}, "
+        f"sources={len(sources)}"
+    )
+    if result.get("keywords"):
+        trace_line += f", keywords={len(result['keywords'])}"
     if result["compressed"]:
         trace_line += " (compressed summary + refreshed one_liner)"
 

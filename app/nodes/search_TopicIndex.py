@@ -47,6 +47,7 @@ def search_TopicIndex(state: State) -> dict:
             "matched_topic_id": None,
             "matched_topic_path": None,
             "match_reason": "index is empty",
+            "topic_content": "",
             "trace": ["search_TopicIndex: index empty, no router call made"],
         }
 
@@ -69,6 +70,7 @@ def search_TopicIndex(state: State) -> dict:
             "matched_topic_id": None,
             "matched_topic_path": None,
             "match_reason": decision.reason,
+            "topic_content": "",
             "trace": [
                 f"search_TopicIndex: router returned unknown id '{matched_id}' — treating as no match"
             ],
@@ -86,5 +88,6 @@ def search_TopicIndex(state: State) -> dict:
         "matched_topic_id": None,
         "matched_topic_path": None,
         "match_reason": decision.reason,
+        "topic_content": "",
         "trace": [f"search_TopicIndex: no match — {decision.reason}"],
     }
