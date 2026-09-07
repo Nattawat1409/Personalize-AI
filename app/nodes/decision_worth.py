@@ -99,6 +99,19 @@ Given the user's question and the answer given, decide ONE action:
   (you will be told if one was matched)
 - "create" — anything else worth remembering that isn't covered above
 
+IMPORTANT — meta-questions about the conversation itself are "skip", never
+"create", even when no existing topic matches. A question asking to recall,
+recap, or summarise what has already been discussed (e.g. "what have we
+talked about today?", "what do you know about me?", "remind me what we've
+covered") introduces NO new information — the answer is just a restatement of
+memory that already exists elsewhere. Filing it as a new topic would store a
+pointer to existing memory as if it were new knowledge, which is redundant.
+This is different from asking about a SPECIFIC known subject (e.g. "remind me
+about cement") — that recalls one topic and should be "append" if the router
+matched it. The test: does the question name a specific subject, or does it
+ask for a general recap of the conversation as a whole? General recap → skip,
+regardless of match.
+
 If action is "append" or "create", also provide: category (one of
 business_logic / python_topic / general, following the rules above), title (a
 short topic title), one_liner (one sentence describing the topic, used later
@@ -116,6 +129,11 @@ Lowercase, single words or short phrases, no duplicates of the title itself.
 
 If action is "profile", provide profile_update: a short sentence to merge into
 the user's profile.
+
+Unless action is "skip", also provide episodic_gist: one short sentence
+capturing what happened this turn (question + what was learned), written for
+a daily activity log — not the same as the topic summary, just a quick note
+of "what was this turn about". Omit episodic_gist only when action is "skip".
 """
 
 
@@ -130,6 +148,7 @@ class Decision(BaseModel):
         description="3-6 specific terms a future question on this topic would contain.",
     )
     profile_update: Optional[str] = None
+    episodic_gist: Optional[str] = None
     low_confidence: bool = Field(
         default=False, description="true if the category call was genuinely uncertain"
     )
@@ -168,5 +187,16 @@ def decision_worth(state: State) -> dict:
             trace.append(f"decision_worth: keywords={', '.join(decision.keywords)}")
     elif action == "profile":
         result["profile_update"] = decision.profile_update or ""
+
+    # Episodic write happens IN ADDITION to the action above, on every
+    # remembered turn — see docs/PLAN-v2.md §6 for why this departs from the
+    # v1 diagram's exclusive 4-way branch.
+    if action != "skip":
+        result["episodic_gist"] = decision.episodic_gist or decision.summary or (
+            decision.profile_update or ""
+        )
+        result["episodic_category"] = (
+            result.get("memory_category") or ("profile" if action == "profile" else "general")
+        )
 
     return result

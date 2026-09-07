@@ -2,6 +2,7 @@
 - research for AI personalize feature to optimize the operation workflow of CIMIE and memorize the user personalize and frequently question by my vary user and 
 
 # workflow #
+```mermaid
 flowchart TD
     start([User Query]) -->|load from current content| profile[Load user_profile.md]
     start --> t1{Search topics_index}
@@ -27,3 +28,4 @@ flowchart TD
     append --> finish
     create --> finish
     update_prof --> finish
+```

@@ -2,6 +2,7 @@ from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import END, START, StateGraph
 
 from app.models.states.state import State
+from app.nodes.append_episodic import append_episodic
 from app.nodes.append_md import append_md
 from app.nodes.assemble_content import assemble_content
 from app.nodes.create_md import create_md
@@ -44,6 +45,7 @@ def build_graph():
     graph.add_node("append_md", append_md)
     graph.add_node("create_md", create_md)
     graph.add_node("update_UserProfile", update_UserProfile)
+    graph.add_node("append_episodic", append_episodic)
 
     graph.add_edge(START, "loading_userProfiles")
     graph.add_edge(START, "search_TopicIndex")
@@ -69,8 +71,13 @@ def build_graph():
             "update_UserProfile": "update_UserProfile",
         },
     )
-    graph.add_edge("append_md", END)
-    graph.add_edge("create_md", END)
-    graph.add_edge("update_UserProfile", END)
+    # Every non-skip action ALSO logs to the episodic layer, in addition to
+    # whichever of these three ran — the v2 departure from v1's exclusive
+    # 4-way branch (docs/PLAN-v2.md §6). "skip" bypasses this entirely and
+    # goes straight to END via route_after_decision.
+    graph.add_edge("append_md", "append_episodic")
+    graph.add_edge("create_md", "append_episodic")
+    graph.add_edge("update_UserProfile", "append_episodic")
+    graph.add_edge("append_episodic", END)
 
     return graph.compile(checkpointer=InMemorySaver())

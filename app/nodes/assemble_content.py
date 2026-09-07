@@ -9,6 +9,10 @@ def assemble_content(state: State) -> dict:
     if profile:
         parts.append(f"# What you know about this user\n\n{profile}")
 
+    episodic_context = state.get("episodic_context", "").strip()
+    if episodic_context:
+        parts.append(f"# Recent activity (last few days)\n\n{episodic_context}")
+
     topic_content = state.get("topic_content", "").strip()
     if topic_content:
         summary, log_text = extract_topic_sections(topic_content)

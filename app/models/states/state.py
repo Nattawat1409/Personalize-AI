@@ -19,6 +19,11 @@ class State(TypedDict, total=False):
     match_reason: str
     topic_content: str
 
+    # --- episodic (v2 Phase 5) ---
+    episodic_context: str  # summary.md + recent daily logs, loaded every turn
+    episodic_gist: str  # one-sentence gist of this turn, for the daily log entry
+    episodic_category: str  # tag on the daily log entry: a genre, or "profile"
+
     # --- generation ---
     context: str
     messages: Annotated[list[AnyMessage], add_messages]
