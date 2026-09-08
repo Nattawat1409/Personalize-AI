@@ -10,8 +10,10 @@ already know:
 A new fact/preference was just learned: "{new_fact}"
 
 Rewrite the section combining both, as a short bullet list. Keep it concise —
-drop anything the new fact supersedes, don't repeat yourself. Return only the
-bullet list, nothing else.
+drop anything the new fact supersedes, don't repeat yourself. Preserve the
+"(direct)" or "(inferred)" tag already on each existing line. Append the tag
+"(direct)" to the new fact's line — it was explicitly stated by the user, not
+inferred. Return only the bullet list, nothing else.
 """
 
 
@@ -24,7 +26,7 @@ def update_UserProfile(state: State) -> dict:
     existing = read_profile_section(current, "Preferences")
 
     if existing == "_(nothing recorded yet)_":
-        merged = f"- {update_text}"
+        merged = f"- {update_text} (direct)"
     else:
         response = llm.invoke(MERGE_PROMPT.format(existing=existing, new_fact=update_text))
         merged = response.content.strip()

@@ -1,15 +1,16 @@
 ---
-updated_at: 2026-08-24T18:33:36Z
+updated_at: 2026-09-08T05:31:34Z
 ---
 
 ## Identity
 _(nothing recorded yet)_
 
 ## Preferences
-*   ผู้เริ่มต้นวิศวกร AI
-*   ต้องการคำตอบสั้นๆ แบบหัวข้อย่อย
-*   ต้องการคำอธิบายที่เรียบง่าย กึ่งเทคนิค
-*   ต้องการคำตอบเป็นภาษาไทย
+*   ผู้เริ่มต้นวิศวกร AI (inferred)
+*   The user prefers short and concise answers (direct)
+*   ต้องการคำตอบสั้นๆ แบบหัวข้อย่อย (direct)
+*   ต้องการคำอธิบายที่เรียบง่าย กึ่งเทคนิค (direct)
+*   ต้องการคำตอบเป็นภาษาไทย (direct)
 
 ## Recurring Interests
-_(nothing recorded yet)_
+- User frequently inquired about the cement production process. (3 times across 3 days) (inferred)

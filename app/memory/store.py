@@ -8,6 +8,9 @@ from typing import Optional
 
 from app.config import (
     CATEGORIES,
+    EPISODIC_DAYS,
+    EPISODIC_ROOT,
+    EPISODIC_SUMMARY_PATH,
     KEYWORDS_MAX,
     MEMORY_ROOT,
     SOURCES_TOP_K,
@@ -27,6 +30,15 @@ _(nothing recorded yet)_
 
 ## Recurring Interests
 _(nothing recorded yet)_
+"""
+
+EPISODIC_SUMMARY_TEMPLATE = """---
+updated_at: null
+consolidated_through: null
+---
+
+## Global Summary
+_(nothing consolidated yet)_
 """
 
 
@@ -412,3 +424,111 @@ def merge_profile_update(current_content: str, section: str, new_text: str) -> s
     now = _now()
     rendered_sections = "\n\n".join(f"## {name}\n{sections[name]}" for name in _SECTIONS)
     return f"---\nupdated_at: {now}\n---\n\n{rendered_sections}\n"
+
+
+# --- episodic layer (v2 Phase 5) ---------------------------------------------
+#
+# Two kinds of file:
+#   episodic/YYYY-MM-DD.md  — one per day, appended to as turns happen
+#   episodic/summary.md     — rolling global summary, rewritten by the
+#                              nightly job only (never touched mid-day)
+
+
+def _episodic_day_path(day: str) -> Path:
+    return EPISODIC_ROOT / f"{day}.md"
+
+
+def _today_str() -> str:
+    return datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+
+def list_episodic_day_files() -> list[Path]:
+    if not EPISODIC_ROOT.exists():
+        return []
+    return sorted(p for p in EPISODIC_ROOT.glob("*.md") if p.stem != "summary")
+
+
+def read_episodic_day(path: Path) -> tuple[dict, list[str]]:
+    """Returns (frontmatter dict, list of raw entry blocks) for one daily log."""
+    if not path.exists():
+        return {}, []
+    content = path.read_text(encoding="utf-8")
+    fm_match = re.match(r"^---\n(.*?)\n---\n", content, re.DOTALL)
+    fm: dict = {}
+    body = content
+    if fm_match:
+        for line in fm_match.group(1).splitlines():
+            if ":" in line:
+                k, v = line.split(":", 1)
+                fm[k.strip()] = v.strip()
+        body = content[fm_match.end():].strip()
+    entries = re.split(r"\n\n(?=### )", body) if body else []
+    entries = [e.strip() for e in entries if e.strip()]
+    return fm, entries
+
+
+def append_episodic_entry(query: str, gist: str, category: str) -> str:
+    """Appends one entry to today's daily log, creating it if needed.
+
+    Returns the path relative to MEMORY_ROOT (e.g. "episodic/2026-08-30.md"),
+    matching the shape of a topic path.
+    """
+    day = _today_str()
+    path = _episodic_day_path(day)
+    fm, entries = read_episodic_day(path)
+
+    time_str = datetime.now(timezone.utc).strftime("%H:%M")
+    entries.append(f"### {time_str} — {category}\n**Q:** {query}\n**Gist:** {gist}")
+
+    turn_count = int(fm.get("turn_count", len(entries) - 1)) + 1
+    body = "\n\n".join(entries)
+    content = f"---\ndate: {day}\nturn_count: {turn_count}\n---\n\n{body}\n"
+    _atomic_write(path, content)
+
+    return f"episodic/{day}.md"
+
+
+def load_episodic_summary() -> str:
+    if not EPISODIC_SUMMARY_PATH.exists() or EPISODIC_SUMMARY_PATH.stat().st_size == 0:
+        return ""
+    return EPISODIC_SUMMARY_PATH.read_text(encoding="utf-8")
+
+
+def save_episodic_summary(content: str) -> None:
+    _atomic_write(EPISODIC_SUMMARY_PATH, content)
+
+
+def load_episodic_context(days: int = EPISODIC_DAYS) -> str:
+    """Rolling summary + the last `days` daily logs, for injection into context.
+
+    Only files that exist are included — a quiet day with no file simply
+    contributes nothing, it is not an error.
+    """
+    parts = []
+
+    summary_raw = load_episodic_summary()
+    if summary_raw:
+        m = re.search(r"## Global Summary\n(.*?)\Z", summary_raw, re.DOTALL)
+        summary_text = (m.group(1).strip() if m else "").strip()
+        if summary_text and summary_text != "_(nothing consolidated yet)_":
+            parts.append(f"**Summary of earlier activity:**\n{summary_text}")
+
+    all_days = list_episodic_day_files()
+    recent = all_days[-days:] if days > 0 else all_days
+    for path in recent:
+        fm, entries = read_episodic_day(path)
+        if not entries:
+            continue
+        header = f"**{fm.get('date', path.stem)}:**"
+        parts.append(header + "\n" + "\n".join(f"- {entry_gist_line(e)}" for e in entries))
+
+    return "\n\n".join(parts)
+
+
+def entry_gist_line(entry: str) -> str:
+    """Reduces one daily-log entry block to a single display line."""
+    q_match = re.search(r"\*\*Q:\*\*\s*(.+)", entry)
+    g_match = re.search(r"\*\*Gist:\*\*\s*(.+)", entry)
+    q = q_match.group(1).strip() if q_match else ""
+    g = g_match.group(1).strip() if g_match else ""
+    return f"{q} — {g}" if g else q

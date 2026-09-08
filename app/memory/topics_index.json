@@ -19,8 +19,8 @@
    ],
    "sources": [],
    "created_at": "2026-08-23T14:56:52Z",
-   "updated_at": "2026-08-29T18:46:56Z",
-   "turn_count": 7
+   "updated_at": "2026-09-07T17:13:09Z",
+   "turn_count": 8
   },
   {
    "id": "concrete-mix-ratios",
@@ -116,6 +116,48 @@
    "sources": [],
    "created_at": "2026-08-24T18:15:00Z",
    "updated_at": "2026-08-24T18:15:00Z",
+   "turn_count": 1
+  },
+  {
+   "id": "python-decorators",
+   "title": "Python Decorators",
+   "category": "python_topic",
+   "path": "python_topic/python-decorators.md",
+   "one_liner": "Explains what Python decorators are, how they work, and their common use cases for modifying or enhancing functions.",
+   "keywords": [
+    "decorator",
+    "function wrapper",
+    "syntactic sugar",
+    "function enhancement",
+    "logging",
+    "authentication",
+    "wrapper",
+    "function modification"
+   ],
+   "sources": [],
+   "created_at": "2026-09-07T17:13:18Z",
+   "updated_at": "2026-09-07T17:25:32Z",
+   "turn_count": 2
+  },
+  {
+   "id": "lunch-spots-near-bangkok",
+   "title": "Lunch spots near Bangkok",
+   "category": "general",
+   "path": "general/lunch-spots-near-bangkok.md",
+   "one_liner": "Information on good lunch spots in and around Bangkok, including areas like Ari/Thonglor, riverside, and Bang Pu.",
+   "keywords": [
+    "Bangkok",
+    "lunch",
+    "restaurant",
+    "food",
+    "Ari",
+    "Thonglor",
+    "Chao Phraya River",
+    "Nonthaburi"
+   ],
+   "sources": [],
+   "created_at": "2026-09-07T17:13:33Z",
+   "updated_at": "2026-09-07T17:13:33Z",
    "turn_count": 1
   }
  ]
