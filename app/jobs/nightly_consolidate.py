@@ -9,7 +9,7 @@ Diagram boxes implemented here:
   "Daily summary" -> "Global summary (episodic/summary.md)"
       -> "Aggregate -> user_profile.md (inferred)"
 
-See docs/PLAN-v2.md §6 for the spec this follows.
+See docs/PLAN-v2.md for seeing this specific spec.
 """
 
 import re
