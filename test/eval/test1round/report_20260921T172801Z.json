@@ -1,0 +1,747 @@
+{
+  "judge_model": "gemini-2.5-pro",
+  "evalset_sha256": "4b14cbdc55bd85e215944231912bbc4f22c87118d8c448807fb07330f9e9e614",
+  "systems": {
+    "baseline": {
+      "config": {
+        "system": "baseline",
+        "memory_enabled": false,
+        "timestamp": "2026-09-21T15:42:27+00:00"
+      },
+      "recall_at_8": {
+        "value": 0.4117647058823529,
+        "hits": 7,
+        "doc_level": 0.5882352941176471,
+        "n": 17,
+        "detail": [
+          {
+            "turn": "q01",
+            "chunk_hit": false,
+            "doc_hit": false
+          },
+          {
+            "turn": "q02",
+            "chunk_hit": false,
+            "doc_hit": false
+          },
+          {
+            "turn": "q03",
+            "chunk_hit": true,
+            "doc_hit": true
+          },
+          {
+            "turn": "q04",
+            "chunk_hit": true,
+            "doc_hit": true
+          },
+          {
+            "turn": "q05",
+            "chunk_hit": false,
+            "doc_hit": false
+          },
+          {
+            "turn": "q06",
+            "chunk_hit": false,
+            "doc_hit": true
+          },
+          {
+            "turn": "q07",
+            "chunk_hit": true,
+            "doc_hit": true
+          },
+          {
+            "turn": "q08",
+            "chunk_hit": false,
+            "doc_hit": true
+          },
+          {
+            "turn": "q09",
+            "chunk_hit": false,
+            "doc_hit": false
+          },
+          {
+            "turn": "q10",
+            "chunk_hit": true,
+            "doc_hit": true
+          },
+          {
+            "turn": "q11",
+            "chunk_hit": true,
+            "doc_hit": true
+          },
+          {
+            "turn": "q12",
+            "chunk_hit": false,
+            "doc_hit": false
+          },
+          {
+            "turn": "q13",
+            "chunk_hit": false,
+            "doc_hit": true
+          },
+          {
+            "turn": "q14",
+            "chunk_hit": false,
+            "doc_hit": false
+          },
+          {
+            "turn": "q15",
+            "chunk_hit": true,
+            "doc_hit": true
+          },
+          {
+            "turn": "q16",
+            "chunk_hit": false,
+            "doc_hit": false
+          },
+          {
+            "turn": "q17",
+            "chunk_hit": true,
+            "doc_hit": true
+          }
+        ]
+      },
+      "cross_session_recall": {
+        "value": 0.0,
+        "n": 3,
+        "detail": [
+          {
+            "turn": "r1",
+            "intent": "topic_and_style",
+            "score": 0.0,
+            "why": "The assistant explicitly states it has no information about the previous conversation or the user's preferences."
+          },
+          {
+            "turn": "r2",
+            "intent": "topic_content",
+            "score": 0.0,
+            "why": "The assistant does not recall the previous conversation; it simply re-answers the topic from its knowledge base, adding a lot of new information that was not in the original, much shorter answer."
+          },
+          {
+            "turn": "r3",
+            "intent": "topic_and_role",
+            "score": 0.0,
+            "why": "The assistant's reply is a generic 'not found' message and shows no memory of the previous conversation or the user's identity."
+          }
+        ]
+      },
+      "wrong_memory": {
+        "value": 0.05263157894736842,
+        "wrong": 1,
+        "answered": 19,
+        "refused": 1,
+        "reminder_wrong": 1,
+        "reminder_answered": 2,
+        "detail": [
+          {
+            "turn": "q01",
+            "type": "question",
+            "answered": true,
+            "wrong": false,
+            "claims": []
+          },
+          {
+            "turn": "q02",
+            "type": "question",
+            "answered": true,
+            "wrong": false,
+            "claims": []
+          },
+          {
+            "turn": "q03",
+            "type": "question",
+            "answered": true,
+            "wrong": false,
+            "claims": []
+          },
+          {
+            "turn": "q04",
+            "type": "question",
+            "answered": true,
+            "wrong": false,
+            "claims": []
+          },
+          {
+            "turn": "q05",
+            "type": "question",
+            "answered": true,
+            "wrong": false,
+            "claims": []
+          },
+          {
+            "turn": "q06",
+            "type": "question",
+            "answered": true,
+            "wrong": false,
+            "claims": []
+          },
+          {
+            "turn": "q07",
+            "type": "question",
+            "answered": true,
+            "wrong": false,
+            "claims": []
+          },
+          {
+            "turn": "q08",
+            "type": "question",
+            "answered": true,
+            "wrong": false,
+            "claims": []
+          },
+          {
+            "turn": "q09",
+            "type": "question",
+            "answered": true,
+            "wrong": false,
+            "claims": []
+          },
+          {
+            "turn": "q10",
+            "type": "question",
+            "answered": true,
+            "wrong": false,
+            "claims": []
+          },
+          {
+            "turn": "q11",
+            "type": "question",
+            "answered": true,
+            "wrong": false,
+            "claims": []
+          },
+          {
+            "turn": "q12",
+            "type": "question",
+            "answered": true,
+            "wrong": false,
+            "claims": []
+          },
+          {
+            "turn": "q13",
+            "type": "question",
+            "answered": true,
+            "wrong": false,
+            "claims": []
+          },
+          {
+            "turn": "q14",
+            "type": "question",
+            "answered": true,
+            "wrong": false,
+            "claims": []
+          },
+          {
+            "turn": "q15",
+            "type": "question",
+            "answered": true,
+            "wrong": false,
+            "claims": []
+          },
+          {
+            "turn": "q16",
+            "type": "question",
+            "answered": true,
+            "wrong": false,
+            "claims": []
+          },
+          {
+            "turn": "q17",
+            "type": "question",
+            "answered": true,
+            "wrong": false,
+            "claims": []
+          },
+          {
+            "turn": "r1",
+            "type": "reminder",
+            "answered": true,
+            "wrong": false,
+            "claims": []
+          },
+          {
+            "turn": "r2",
+            "type": "reminder",
+            "answered": true,
+            "wrong": true,
+            "claims": [
+              "Implicitly claims the previous conversation about the SCG robot included details about the Auto SPC system, Load cell, PLC, Touch Screen, TCP/IP and Rs-485 connections, and the specific functions of each component, when in fact the earlier conversation only mentioned that the robot weighs a brick every 34/35 bricks."
+            ]
+          },
+          {
+            "turn": "r3",
+            "answered": false,
+            "wrong": false,
+            "claims": []
+          }
+        ]
+      }
+    },
+    "personalize": {
+      "config": {
+        "system": "personalize",
+        "memory_enabled": true,
+        "timestamp": "2026-09-21T17:15:59+00:00"
+      },
+      "recall_at_8": {
+        "value": 0.4117647058823529,
+        "hits": 7,
+        "doc_level": 0.5882352941176471,
+        "n": 17,
+        "detail": [
+          {
+            "turn": "q01",
+            "chunk_hit": false,
+            "doc_hit": false
+          },
+          {
+            "turn": "q02",
+            "chunk_hit": false,
+            "doc_hit": false
+          },
+          {
+            "turn": "q03",
+            "chunk_hit": true,
+            "doc_hit": true
+          },
+          {
+            "turn": "q04",
+            "chunk_hit": true,
+            "doc_hit": true
+          },
+          {
+            "turn": "q05",
+            "chunk_hit": false,
+            "doc_hit": false
+          },
+          {
+            "turn": "q06",
+            "chunk_hit": false,
+            "doc_hit": true
+          },
+          {
+            "turn": "q07",
+            "chunk_hit": true,
+            "doc_hit": true
+          },
+          {
+            "turn": "q08",
+            "chunk_hit": false,
+            "doc_hit": true
+          },
+          {
+            "turn": "q09",
+            "chunk_hit": false,
+            "doc_hit": false
+          },
+          {
+            "turn": "q10",
+            "chunk_hit": true,
+            "doc_hit": true
+          },
+          {
+            "turn": "q11",
+            "chunk_hit": true,
+            "doc_hit": true
+          },
+          {
+            "turn": "q12",
+            "chunk_hit": false,
+            "doc_hit": false
+          },
+          {
+            "turn": "q13",
+            "chunk_hit": false,
+            "doc_hit": true
+          },
+          {
+            "turn": "q14",
+            "chunk_hit": false,
+            "doc_hit": false
+          },
+          {
+            "turn": "q15",
+            "chunk_hit": true,
+            "doc_hit": true
+          },
+          {
+            "turn": "q16",
+            "chunk_hit": false,
+            "doc_hit": false
+          },
+          {
+            "turn": "q17",
+            "chunk_hit": true,
+            "doc_hit": true
+          }
+        ]
+      },
+      "cross_session_recall": {
+        "value": 0.6666666666666666,
+        "n": 3,
+        "detail": [
+          {
+            "turn": "r1",
+            "intent": "topic_and_style",
+            "score": 1.0,
+            "why": "The assistant correctly recalled the specific details of the user's previous question (about the 'Holderbank' seminar) and both of their stated preferences for explanation style (new engineer, bullet points)."
+          },
+          {
+            "turn": "r2",
+            "intent": "topic_content",
+            "score": 1.0,
+            "why": "The assistant correctly recalled the user's specific question and accurately summarized its own previous answer from the earlier conversation."
+          },
+          {
+            "turn": "r3",
+            "intent": "topic_and_role",
+            "score": 0.0,
+            "why": "The assistant's reply is a generic \"not found\" message, showing no memory of the previous topic or the user's self-description."
+          }
+        ]
+      },
+      "wrong_memory": {
+        "value": 0.05263157894736842,
+        "wrong": 1,
+        "answered": 19,
+        "refused": 1,
+        "reminder_wrong": 1,
+        "reminder_answered": 2,
+        "detail": [
+          {
+            "turn": "q01",
+            "type": "question",
+            "answered": true,
+            "wrong": false,
+            "claims": []
+          },
+          {
+            "turn": "q02",
+            "type": "question",
+            "answered": true,
+            "wrong": false,
+            "claims": []
+          },
+          {
+            "turn": "q03",
+            "type": "question",
+            "answered": true,
+            "wrong": false,
+            "claims": []
+          },
+          {
+            "turn": "q04",
+            "type": "question",
+            "answered": true,
+            "wrong": false,
+            "claims": []
+          },
+          {
+            "turn": "q05",
+            "type": "question",
+            "answered": true,
+            "wrong": false,
+            "claims": []
+          },
+          {
+            "turn": "q06",
+            "type": "question",
+            "answered": true,
+            "wrong": false,
+            "claims": []
+          },
+          {
+            "turn": "q07",
+            "type": "question",
+            "answered": true,
+            "wrong": false,
+            "claims": []
+          },
+          {
+            "turn": "q08",
+            "type": "question",
+            "answered": true,
+            "wrong": false,
+            "claims": []
+          },
+          {
+            "turn": "q09",
+            "type": "question",
+            "answered": true,
+            "wrong": false,
+            "claims": []
+          },
+          {
+            "turn": "q10",
+            "type": "question",
+            "answered": true,
+            "wrong": false,
+            "claims": []
+          },
+          {
+            "turn": "q11",
+            "type": "question",
+            "answered": true,
+            "wrong": false,
+            "claims": []
+          },
+          {
+            "turn": "q12",
+            "type": "question",
+            "answered": true,
+            "wrong": false,
+            "claims": []
+          },
+          {
+            "turn": "q13",
+            "type": "question",
+            "answered": true,
+            "wrong": false,
+            "claims": []
+          },
+          {
+            "turn": "q14",
+            "type": "question",
+            "answered": true,
+            "wrong": false,
+            "claims": []
+          },
+          {
+            "turn": "q15",
+            "type": "question",
+            "answered": true,
+            "wrong": false,
+            "claims": []
+          },
+          {
+            "turn": "q16",
+            "type": "question",
+            "answered": true,
+            "wrong": false,
+            "claims": []
+          },
+          {
+            "turn": "q17",
+            "type": "question",
+            "answered": true,
+            "wrong": false,
+            "claims": []
+          },
+          {
+            "turn": "r1",
+            "type": "reminder",
+            "answered": true,
+            "wrong": false,
+            "claims": []
+          },
+          {
+            "turn": "r2",
+            "type": "reminder",
+            "answered": true,
+            "wrong": true,
+            "claims": [
+              "The conversation took place on September 21, 2026."
+            ]
+          },
+          {
+            "turn": "r3",
+            "answered": false,
+            "wrong": false,
+            "claims": []
+          }
+        ]
+      }
+    }
+  },
+  "win_rate": {
+    "value": 0.7,
+    "ci95": [
+      0.575,
+      0.825
+    ],
+    "wins": 9,
+    "ties": 10,
+    "losses": 1,
+    "n": 20,
+    "by_type": {
+      "question": 0.6764705882352942,
+      "reminder": 0.8333333333333334
+    },
+    "detail": [
+      {
+        "turn": "q01",
+        "type": "question",
+        "score": 1.0,
+        "passes": [
+          "B",
+          "A"
+        ]
+      },
+      {
+        "turn": "q02",
+        "type": "question",
+        "score": 0.5,
+        "passes": [
+          "TIE",
+          "TIE"
+        ]
+      },
+      {
+        "turn": "q03",
+        "type": "question",
+        "score": 0.0,
+        "passes": [
+          "A",
+          "B"
+        ]
+      },
+      {
+        "turn": "q04",
+        "type": "question",
+        "score": 0.5,
+        "passes": [
+          "A",
+          "A"
+        ]
+      },
+      {
+        "turn": "q05",
+        "type": "question",
+        "score": 0.5,
+        "passes": [
+          "B",
+          "TIE"
+        ]
+      },
+      {
+        "turn": "q06",
+        "type": "question",
+        "score": 1.0,
+        "passes": [
+          "B",
+          "A"
+        ]
+      },
+      {
+        "turn": "q07",
+        "type": "question",
+        "score": 1.0,
+        "passes": [
+          "B",
+          "A"
+        ]
+      },
+      {
+        "turn": "q08",
+        "type": "question",
+        "score": 0.5,
+        "passes": [
+          "A",
+          "TIE"
+        ]
+      },
+      {
+        "turn": "q09",
+        "type": "question",
+        "score": 0.5,
+        "passes": [
+          "TIE",
+          "TIE"
+        ]
+      },
+      {
+        "turn": "q10",
+        "type": "question",
+        "score": 0.5,
+        "note": "identical"
+      },
+      {
+        "turn": "q11",
+        "type": "question",
+        "score": 1.0,
+        "passes": [
+          "B",
+          "A"
+        ]
+      },
+      {
+        "turn": "q12",
+        "type": "question",
+        "score": 0.5,
+        "passes": [
+          "TIE",
+          "TIE"
+        ]
+      },
+      {
+        "turn": "q13",
+        "type": "question",
+        "score": 1.0,
+        "passes": [
+          "B",
+          "A"
+        ]
+      },
+      {
+        "turn": "q14",
+        "type": "question",
+        "score": 1.0,
+        "passes": [
+          "B",
+          "A"
+        ]
+      },
+      {
+        "turn": "q15",
+        "type": "question",
+        "score": 0.5,
+        "passes": [
+          "A",
+          "A"
+        ]
+      },
+      {
+        "turn": "q16",
+        "type": "question",
+        "score": 0.5,
+        "passes": [
+          "TIE",
+          "A"
+        ]
+      },
+      {
+        "turn": "q17",
+        "type": "question",
+        "score": 1.0,
+        "passes": [
+          "B",
+          "A"
+        ]
+      },
+      {
+        "turn": "r1",
+        "type": "reminder",
+        "score": 1.0,
+        "passes": [
+          "B",
+          "A"
+        ]
+      },
+      {
+        "turn": "r2",
+        "type": "reminder",
+        "score": 1.0,
+        "passes": [
+          "B",
+          "A"
+        ]
+      },
+      {
+        "turn": "r3",
+        "type": "reminder",
+        "score": 0.5,
+        "note": "identical"
+      }
+    ]
+  }
+}
