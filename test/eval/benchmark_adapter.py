@@ -27,6 +27,7 @@ part of what the user waits for). Write-back is measured separately as
 import asyncio
 import sys
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "code"))
@@ -53,6 +54,7 @@ def _warn(msg: str) -> None:
 
 async def answer(question: str, user_id: str, session_id: str) -> dict:
     language = detect_language(question)
+    asked_at = datetime.now(timezone.utc)
 
     # Chunk identity (not timed — this is measurement, not the product path).
     # RAW question only: memory must not alter what retrieval sees.
@@ -76,6 +78,7 @@ async def answer(question: str, user_id: str, session_id: str) -> dict:
         )
         writeback_ms = int((time.perf_counter() - t1) * 1000)
 
+    logged_at = datetime.now(timezone.utc)
     memory_error = read.error or write["error"]
     if memory_error:
         _warn(f"memory error (turn continues without it): {memory_error}")
@@ -95,6 +98,10 @@ async def answer(question: str, user_id: str, session_id: str) -> dict:
         "retrieved_chunk_ids": [r["id"] for r in raw],
         # --- extra keys (the runner keeps them; the scorer ignores them) ---
         "writeback_ms": writeback_ms,
+        # UTC, the same clock the episodic log uses. The scorer checks "when did we
+        # discuss X?" answers against these (asked_at <= log entry <= logged_at).
+        "asked_at_utc": asked_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "logged_at_utc": logged_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
         "memory_action": write["action"],
         "memory_error": memory_error,
     }

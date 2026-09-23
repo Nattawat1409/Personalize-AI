@@ -1,12 +1,23 @@
 [project]
 name = "personalize-ai"
-version = "0.1.0"
-description = "Add your description here"
+version = "0.2.0"
+description = "Baseline KM RAG + a personal memory layer (profile, topic notes, episodic log) — benchmarked against AI-KM-Agent_BaseCase"
 readme = "README.md"
 requires-python = ">=3.12"
+# Dependencies are deliberately identical to the baseline repo's: the memory
+# layer must be the only difference between the two systems, so library
+# versions (pinned via uv.lock) must match too. Do not add or bump one without
+# re-issuing the baseline's HANDOFF. No LangGraph: the pipeline is a plain
+# async function, as in the baseline.
 dependencies = [
-    "langchain-core>=0.3",
-    "langchain-openai>=0.2",
-    "langgraph>=1.2.11",
-    "python-dotenv>=1.0",
+    "pinecone>=7.3.0,<8",
+    "langchain-pinecone>=0.2.13,<0.3",
+    "langchain-google-genai>=4.2.1,<5",
+    "langchain-core>=1.2.15,<2",
+    "langchain-classic>=1.0.1,<2",
+    "python-dotenv>=1.2.1,<2",
+    "langdetect>=1.0.9,<2",
+    "langchain>=1.4.1",
+    "numpy>=2.5.3",
+    "dotenv>=0.9.9",
 ]

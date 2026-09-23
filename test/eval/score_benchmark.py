@@ -1,7 +1,9 @@
 """Score one system, or compare two, on the four benchmark metrics.
 
   1. Win-rate              pairwise LLM judge, personalize vs baseline (needs --personalize)
-  2. Cross-session recall  3 reminder turns: did it remember the earlier session?
+  2. Cross-session recall  reminder turns: did it remember the earlier conversation?
+                           (r4 also asks WHEN a topic was discussed; graded against
+                           timestamps the personalize adapter records per turn)
   3. Wrong-memory rate     fabricated / wrong claims about the user or the past
   4. Recall@8 (guardrail)  chunk-level; memory must not damage retrieval
 
@@ -145,6 +147,49 @@ def prior_context(evalset: dict, turns: dict, upto_id: str) -> tuple[list[str], 
     return qs, qa
 
 
+TIME_RULE = (
+    "Times are UTC (the clock the memory log uses). The same instant written in Thai time "
+    "(UTC+7), or in Thai-language date/time wording, is equally correct. Allow a 2-minute "
+    "tolerance: the memory note is written shortly after the question was asked."
+)
+
+
+def stamp(rec: dict | None) -> str | None:
+    """When a turn really happened, from the timestamps the adapter recorded (UTC)."""
+    if not rec or not rec.get("asked_at_utc"):
+        return None
+    a = rec["asked_at_utc"].replace("T", " ").rstrip("Z")
+    b = (rec.get("logged_at_utc") or rec["asked_at_utc"]).replace("T", " ").rstrip("Z")
+    return f"asked {a} UTC, memory note written {b} UTC"
+
+
+def time_evidence(ref_rec: dict | None) -> str:
+    """Ground truth for a "when did we discuss X?" fact. The true answer differs on
+    every run, so it cannot live in evalset.json; it comes from the result file."""
+    s = stamp(ref_rec)
+    if s is None:
+        return (
+            "No recorded timestamp is available for that exchange, so any date or time the "
+            "reply states is unverified and the time fact is NOT satisfied.\n"
+        )
+    return f"RECORDED TIME of that exchange (the truth): {s}. {TIME_RULE}\n"
+
+
+def times_note(evalset: dict, turns: dict, upto_id: str) -> str:
+    """Real timestamps of earlier turns, so a correct "we talked at 17:19" is not
+    flagged as an invented claim. Empty (no prompt change) when none were recorded."""
+    lines = []
+    for t in evalset["turns"]:
+        if t["turn_id"] == upto_id:
+            break
+        s = stamp(turns.get(t["turn_id"]))
+        if s and t["type"] in ("question", "reminder"):
+            lines.append(f"- {t['turn_id']} ({t['question'][:50]}): {s}")
+    if not lines:
+        return ""
+    return "\nReal timestamps of the earlier exchanges:\n" + "\n".join(lines) + f"\n{TIME_RULE}\n"
+
+
 RECALL_PROMPT = """You are grading whether an AI assistant correctly REMEMBERED an \
 earlier conversation. The user has now opened a NEW session.
 
@@ -154,7 +199,7 @@ WHAT THE USER SAID ABOUT THEMSELVES, in an earlier session:
 THE EARLIER EXCHANGE the user is referring to:
 QUESTION: {ref_q}
 WHAT THE ASSISTANT ANSWERED AT THE TIME: {ref_a}
-
+{time_evidence}
 USER'S NEW MESSAGE: {question}
 ASSISTANT'S REPLY:
 {answer}
@@ -184,7 +229,7 @@ Questions the user asked earlier:
 {asked}
 What the assistant really answered earlier:
 {answered}
-
+{times}
 USER'S MESSAGE: {question}
 ASSISTANT'S ANSWER:
 {answer}
@@ -272,6 +317,7 @@ async def cross_session_recall(judge: Judge, evalset: dict, sysname: str, turns:
                 profile=bullets(evalset["profile_statements"]),
                 ref_q=ref["question"],
                 ref_a=str(ref_rec["answer"])[:CLIP] if usable(ref_rec) else "(none)",
+                time_evidence=time_evidence(ref_rec) if r.get("time_check") else "",
                 question=r["question"],
                 answer=rec["answer"],
                 facts="\n".join(f"{i + 1}. {f}" for i, f in enumerate(r["expected_recall"])),
@@ -302,6 +348,7 @@ async def wrong_memory(judge: Judge, evalset: dict, sysname: str, turns: dict) -
                 profile=bullets(evalset["profile_statements"]),
                 asked=bullets(asked),
                 answered="\n\n".join(answered) or "(nothing yet)",
+                times=times_note(evalset, turns, t["turn_id"]),
                 question=t["question"],
                 answer=rec["answer"],
             ),
@@ -347,6 +394,11 @@ async def win_rate(judge: Judge, evalset: dict, base: dict, new: dict) -> dict:
             if t["type"] == "question"
             else "This message asks the assistant to recall the earlier conversation.\n"
         )
+        if t.get("time_check") and stamp(new.get(t["references_turn"])):
+            reference += (
+                f"Recorded time of the earlier exchange (the truth): "
+                f"{stamp(new.get(t['references_turn']))}. {TIME_RULE}\n"
+            )
 
         async def pass_(a: dict, b: dict, tag: str) -> str:
             v = await judge.ask(

@@ -4,7 +4,6 @@
         user_profile.md        who the user is, how they like answers
         topics_index.json      router index: id/title/category/one_liner/keywords
         business_logic/*.md    one file per topic, filed by genre
-        python_topic/*.md
         general/*.md
         episodic/YYYY-MM-DD.md dated log of each remembered turn
         episodic/summary.md    rolling summary, rewritten by memory_consolidation

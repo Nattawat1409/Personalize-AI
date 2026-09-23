@@ -5,9 +5,16 @@ from pydantic import BaseModel, Field
 from tools.memory.llm import get_memory_llm
 from workflow.state import State
 
-# The rules and worked examples below are copied verbatim from docs/PLAN.md §6.
-# A model given no criteria classifies SCG-domain questions as "general" —
-# verified empirically. Do not shorten or paraphrase this prompt.
+# The rules and worked examples below started as a verbatim copy of docs/PLAN.md
+# §6. A model given no criteria classifies SCG-domain questions as "general" —
+# verified empirically. Do not shorten or paraphrase the business_logic/general
+# split below.
+#
+# python_topic was removed (2026-09-22): this repo is benchmarked against the
+# production Cimie Pinecone (docs/HANDOFF_NEW_ARCHITECTURE.md), whose corpus is
+# manufacturing/SCG-domain KM only — there is no Python content for a topic to
+# be filed under, so the category was pure dead weight. If a future corpus adds
+# Python content, reintroduce it rather than overloading business_logic/general.
 DECISION_SYSTEM_PROMPT = """You decide, after each turn of a conversation, whether
 anything worth remembering happened, and if so, how to categorise it.
 
@@ -30,37 +37,19 @@ strategy, ESG/sustainability targets, supply chain, distribution network.
 - Paper, pulp, and packaging
 - The Thai/ASEAN construction and building-materials market
 
-### python_topic — how to write Python
-
-Reserved for Python programming content only:
-- Python syntax, language features, idioms, style
-- Standard library and third-party Python packages
-- Debugging, errors, tracebacks, testing in Python
-- Python tooling: uv, pip, virtualenvs, packaging, type hints
-- Python code review, refactoring, performance
-
-Not general programming theory, and not other languages — those are general.
-
 ### general — everything else
 
-Everyday knowledge with no tie to the above: weather, food and restaurant
-prices, sports, travel, entertainment, celebrities, health, language questions,
-personal life advice, small talk, and programming in languages other than
-Python.
+Everyday knowledge and any technical topic with no tie to the above: weather,
+food and restaurant prices, sports, travel, entertainment, celebrities,
+health, language questions, personal life advice, small talk, and
+programming or other technical subjects unrelated to SCG's domains.
 
-## Precedence when a question spans two genres
+## Precedence
 
 Classify by what the user is actually trying to learn:
 1. Learning about SCG or its domains -> business_logic, even if the answer
-   happens to contain Python code
-2. Learning a Python technique -> python_topic, even if the example data is
-   about cement
-3. Otherwise -> general
-
-Example: "Write a Python script to calculate cement mix ratios" ->
-business_logic if they want the ratios, python_topic if they want the
-scripting technique. When it is genuinely 50/50, prefer business_logic — SCG
-is this project's purpose.
+   touches on something else along the way
+2. Otherwise -> general
 
 ## Worked examples
 
@@ -73,20 +62,15 @@ is this project's purpose.
 | How many branches does SCG have? | business_logic |
 | Difference between cement and concrete? | business_logic |
 | Thailand construction market size? | business_logic |
-| How do I write a Python for-loop? | python_topic |
-| What's the difference between a list and a tuple? | python_topic |
-| How do I fix this KeyError traceback? | python_topic |
-| How do I use pandas groupby? | python_topic |
-| How do I set up a venv with uv? | python_topic |
 | What's the weather in Bangkok today? | general |
 | How much does food cost in Thailand? | general |
 | How many sports are popular in Thailand? | general |
-| How do I write a for loop in JavaScript? | general |
+| How do I write a Python for-loop? | general |
 | How to flirt with someone? | general |
 
 ## Tie-breaker
 
-If genuinely uncertain after applying the precedence rules, choose general.
+If genuinely uncertain after applying the precedence rule, choose general.
 
 ## Your task
 
@@ -113,7 +97,7 @@ ask for a general recap of the conversation as a whole? General recap → skip,
 regardless of match.
 
 If action is "append" or "create", also provide: category (one of
-business_logic / python_topic / general, following the rules above), title (a
+business_logic / general, following the rules above), title (a
 short topic title, ALWAYS in English even when the conversation is in another
 language — it is turned into a file name), one_liner (one sentence describing
 the topic, in the same language as the user's question, used later by a router
@@ -141,7 +125,7 @@ of "what was this turn about". Omit episodic_gist only when action is "skip".
 
 class Decision(BaseModel):
     action: Literal["skip", "append", "create", "profile"]
-    category: Optional[Literal["business_logic", "python_topic", "general"]] = None
+    category: Optional[Literal["business_logic", "general"]] = None
     title: Optional[str] = None
     one_liner: Optional[str] = None
     summary: Optional[str] = None

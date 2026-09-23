@@ -23,8 +23,10 @@ USERS_ROOT = MEMORY_ROOT / "users"
 # so it must never be able to contain a path separator or "..".
 USER_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$")
 
-# Three genres a topic can be filed under (rules live in nodes/memory/decision_worth.py)
-CATEGORIES = ("business_logic", "python_topic", "general")
+# Genres a topic can be filed under (rules live in nodes/memory/decision_worth.py).
+# python_topic was dropped: this repo is benchmarked against the production Cimie
+# Pinecone (manufacturing/SCG-domain KM only), and general topic doesn't relate to business logic
+CATEGORIES = ("business_logic", "general")
 
 COMPRESS_AT_CHARS = 8000  # topic .md size that triggers a summary rewrite
 ROUTER_MAX_TOPICS = 150  # above this the router prompt gets unwieldy

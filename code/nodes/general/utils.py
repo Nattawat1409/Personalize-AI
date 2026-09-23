@@ -18,7 +18,7 @@ DetectorFactory.seed = 0
 # short, digits only). A plain fallback value, not a second Thai/English test.
 DEFAULT_LANGUAGE = "en"
 
-# check the input query language 
+
 def detect_language(text: str) -> str:
     """Detect the query's language, returning langdetect's ISO code.
 

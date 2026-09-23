@@ -10,7 +10,7 @@ from typing import Literal, Optional
 
 from typing_extensions import TypedDict
 
-Category = Literal["business_logic", "python_topic", "general"]
+Category = Literal["business_logic", "general"]
 
 
 class State(TypedDict, total=False):
