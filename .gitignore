@@ -72,3 +72,6 @@ docs/PLAN.md
 # Python bytecode cache
 __pycache__/
 *.pyc
+
+# Personal-memory runtime data (per-user files written while the system runs)
+data/

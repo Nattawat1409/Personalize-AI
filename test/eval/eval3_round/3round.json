@@ -1,0 +1,134 @@
+{
+  "purpose": "Same 22 turns, same baseline/personalize systems — only the ORDER questions were asked in differs per round (round1=evalset.json, round2=evalset2.json seed 202, round3=evalset3.json seed 303). A metric with a small spread across rounds is order-independent and trustworthy; a large spread means that metric is sensitive to question order (or to judge noise) and single-round numbers from it should not be over-trusted.",
+  "rounds": {
+    "round1": {
+      "report_file": "report_20260922T082804Z.json",
+      "values": {
+        "win_rate": 0.65,
+        "cross_session_recall_baseline": 0.0,
+        "cross_session_recall_personalize": 0.6666666666666666,
+        "wrong_memory_baseline": 0.05263157894736842,
+        "wrong_memory_personalize": 0.05263157894736842,
+        "recall_at_8_baseline": 0.4117647058823529,
+        "recall_at_8_personalize": 0.4117647058823529
+      }
+    },
+    "round2": {
+      "report_file": "report_20260922T083301Z.json",
+      "values": {
+        "win_rate": 0.675,
+        "cross_session_recall_baseline": 0.0,
+        "cross_session_recall_personalize": 0.3333333333333333,
+        "wrong_memory_baseline": 0.10526315789473684,
+        "wrong_memory_personalize": 0.05263157894736842,
+        "recall_at_8_baseline": 0.4117647058823529,
+        "recall_at_8_personalize": 0.4117647058823529
+      }
+    },
+    "round3": {
+      "report_file": "report_20260922T083704Z.json",
+      "values": {
+        "win_rate": 0.65,
+        "cross_session_recall_baseline": 0.0,
+        "cross_session_recall_personalize": 0.6666666666666666,
+        "wrong_memory_baseline": 0.10526315789473684,
+        "wrong_memory_personalize": 0.0,
+        "recall_at_8_baseline": 0.4117647058823529,
+        "recall_at_8_personalize": 0.4117647058823529
+      }
+    }
+  },
+  "summary": {
+    "win_rate": {
+      "better": "higher",
+      "values_by_round": {
+        "round1": 0.65,
+        "round2": 0.675,
+        "round3": 0.65
+      },
+      "mean": 0.6583333333333333,
+      "stdev": 0.014433756729740658,
+      "min": 0.65,
+      "max": 0.675,
+      "spread": 0.025000000000000022
+    },
+    "cross_session_recall_baseline": {
+      "better": "higher",
+      "values_by_round": {
+        "round1": 0.0,
+        "round2": 0.0,
+        "round3": 0.0
+      },
+      "mean": 0.0,
+      "stdev": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "spread": 0.0
+    },
+    "cross_session_recall_personalize": {
+      "better": "higher",
+      "values_by_round": {
+        "round1": 0.6666666666666666,
+        "round2": 0.3333333333333333,
+        "round3": 0.6666666666666666
+      },
+      "mean": 0.5555555555555556,
+      "stdev": 0.19245008972987523,
+      "min": 0.3333333333333333,
+      "max": 0.6666666666666666,
+      "spread": 0.3333333333333333
+    },
+    "wrong_memory_baseline": {
+      "better": "lower",
+      "values_by_round": {
+        "round1": 0.05263157894736842,
+        "round2": 0.10526315789473684,
+        "round3": 0.10526315789473684
+      },
+      "mean": 0.08771929824561403,
+      "stdev": 0.030386856273138196,
+      "min": 0.05263157894736842,
+      "max": 0.10526315789473684,
+      "spread": 0.05263157894736842
+    },
+    "wrong_memory_personalize": {
+      "better": "lower",
+      "values_by_round": {
+        "round1": 0.05263157894736842,
+        "round2": 0.05263157894736842,
+        "round3": 0.0
+      },
+      "mean": 0.03508771929824561,
+      "stdev": 0.030386856273138196,
+      "min": 0.0,
+      "max": 0.05263157894736842,
+      "spread": 0.05263157894736842
+    },
+    "recall_at_8_baseline": {
+      "better": "n/a (must match personalize)",
+      "values_by_round": {
+        "round1": 0.4117647058823529,
+        "round2": 0.4117647058823529,
+        "round3": 0.4117647058823529
+      },
+      "mean": 0.4117647058823529,
+      "stdev": 0.0,
+      "min": 0.4117647058823529,
+      "max": 0.4117647058823529,
+      "spread": 0.0
+    },
+    "recall_at_8_personalize": {
+      "better": "n/a (must match baseline)",
+      "values_by_round": {
+        "round1": 0.4117647058823529,
+        "round2": 0.4117647058823529,
+        "round3": 0.4117647058823529
+      },
+      "mean": 0.4117647058823529,
+      "stdev": 0.0,
+      "min": 0.4117647058823529,
+      "max": 0.4117647058823529,
+      "spread": 0.0
+    }
+  }
+}
