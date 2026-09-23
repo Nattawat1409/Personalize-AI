@@ -1,209 +1,221 @@
 # Personalize-AI
 
-A proof of concept for an AI memory system, being built to eventually apply to
-**Cimie** — the company's production AI chatbot.
+A knowledge-base chatbot that remembers who it's talking to.
 
-The core idea: the agent files every conversation into the right place on
-disk — by topic, by day, and by what it learns about you — so that in a
-**later session** it can read those files back and answer in a way that
-remembers you, instead of starting from zero every time.
+This repo takes an existing RAG (retrieval-augmented generation) pipeline and
+adds a personal memory layer on top of it — a profile of the user, notes on
+topics they've asked about before, and a daily log of what happened. The goal
+was to answer one question honestly: **does adding memory actually make the
+assistant better, or does it just add moving parts?**
 
-This README is a map of the project by **zone**, matching the architecture
-diagram the team has seen in planning. For each zone: what it is, whether
-it's built, and how to test it yourself by hand.
+To answer that, this repo is built to be benchmarked directly against the
+plain version of the same pipeline, with memory as the *only* thing that
+differs between them:
 
----
-
-## Two tracks — read this before touching anything
-
-| | **v1 — POC** | **v2 — Cimie target** |
-|---|---|---|
-| Status | ✅ Built and passing its acceptance tests | 🚧 In progress — see zone table below |
-| Docs | [docs/design.md](docs/design.md), [docs/PLAN.md](docs/PLAN.md) | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/PLAN-v2.md](docs/PLAN-v2.md) |
-| Scope | Personal memory only (no company documents) | Personal memory **+** a separate index over company documents (KM) |
-
-If you're not sure which track something belongs to: **v1 is what actually
-runs today when you chat with the app.** v2 is being built alongside it,
-phase by phase, without breaking v1.
+**Baseline (no memory):** [AI-KM-Agent_BaseCase](https://github.com/Nattawat1409/AI-KM-Agent_BaseCase)
+**This repo (baseline + memory):** you are here
 
 ---
 
-## Setup
+## The result, up front
+
+Same 22-turn scripted conversation, same knowledge base, same generation
+model (`gemini-2.5-flash`) for both systems — the only difference is whether
+memory is switched on. Judged by `gemini-2.5-pro` as a blind pairwise judge.
+
+| Metric | Baseline | +Memory | What it means |
+|---|---|---|---|
+| **Win-rate** (head-to-head, judged blind) | — | **65.0%** (W8 / T10 / L2) | The memory version wins more often than it loses |
+| **Cross-session recall** (asked to recall an earlier session) | 0% | **66.7%** | Baseline *can't* remember by design — memory got 2 of 3 recall questions right |
+| **Wrong-memory rate** (invents or misremembers something about the user) | 5.3% | 5.3% | Memory didn't make things up more than the baseline already does |
+| **Recall@8** (retrieval quality, guardrail) | 41.2% | 41.2% | Identical — memory doesn't touch the retrieval step at all |
+
+Retrieval returned the exact same documents in both systems on 17/17
+questions — confirmation that memory really is the only variable here, not a
+side effect of something else changing.
+
+**Is this result solid, or did it get lucky with question order?** The same
+benchmark was run 3 times with the questions shuffled into different orders
+each time, to check whether the numbers hold up:
+
+| Metric | Mean across 3 runs | Spread (min–max) | Reading |
+|---|---|---|---|
+| Win-rate | 65.8% | 65.0% – 67.5% | Stable — not an order artifact |
+| Recall@8 (both systems) | 41.2% | 41.2% – 41.2% | Perfectly stable, as it should be |
+| Cross-session recall (+memory) | 55.6% | 33.3% – 66.7% | Swings a lot — this is measured off only 3 questions per run, so treat it as "usually gets 2 of 3," not as a precise percentage |
+| Wrong-memory rate (baseline) | 8.8% | 5.3% – 10.5% | The judge itself isn't fully consistent on this one — don't read single-run numbers as exact |
+
+Full numbers, per-turn detail, and every judge verdict are in
+[`test/eval/eval3_round/`](test/eval/eval3_round/).
+
+---
+
+## How it works
+
+```mermaid
+flowchart TD
+    Q["User question"] --> RET
+    Q --> MEM
+
+    subgraph RET["Retrieval — identical to the baseline, never touched by memory"]
+        H["Hybrid search<br/>dense + sparse, RRF fusion"] --> RR["Cross-encoder rerank<br/>top 8"]
+        RR --> FL{"Top score ≥ 0.15?"}
+    end
+
+    subgraph MEM["Personal memory — the only new part"]
+        P["Load user_profile.md<br/>+ recent episodic log"] --> RTR{"Any topics on file?"}
+        RTR -- yes --> M3["LLM router: match a topic, or none"]
+        RTR -- no --> M5
+        M3 --> M5["Read the matched topic .md"]
+        M5 --> MB["Build a memory note"]
+    end
+
+    FL -- no --> NC["Fixed 'not covered' reply<br/>no LLM call, no memory used"]
+    FL -- yes --> GEN["Generate the answer<br/>(same model as baseline)"]
+    MB -. appended to the prompt only if the floor passed .-> GEN
+    GEN --> ANS["Answer"]
+
+    ANS --> WB{"Worth remembering?"}
+    WB -- skip --> LOG["episodic log entry"]
+    WB -- append / create --> TOPIC["update a topic .md"]
+    WB -- profile fact --> PROF["update user_profile.md"]
+    TOPIC --> LOG
+    PROF --> LOG
+    LOG -. end of session .-> NIGHT["Consolidation: daily digest → rolling summary,<br/>recurring topics → profile"]
+```
+
+The short version: retrieval works exactly like the baseline and never sees
+memory. Memory only enters by adding a short note to the prompt right before
+the answer is generated — and only if the knowledge base actually had
+something to say. After answering, a small model decides whether the turn was
+worth keeping, and files it accordingly. A session boundary triggers a
+lightweight consolidation step that turns daily activity into a running
+summary and — only if the same subject came up on 3+ different days — a
+"recurring interest" note on the profile.
+
+**Not in this repo:** BM25 keyword search, metadata filtering, taxonomy
+pruning, and freshness scoring are part of a larger target architecture for
+the production system (Cimie), not this benchmark. See
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) if you want the full target
+design — this repo deliberately keeps retrieval untouched so the memory
+comparison stays clean.
+
+---
+
+## Setting it up
+
+You'll need [uv](https://docs.astral.sh/uv/) and a Pinecone index + Google AI
+Studio key with access to the same knowledge base the baseline repo uses.
 
 ```bash
+git clone https://github.com/Nattawat1409/Personalize-AI.git
+cd Personalize-AI
 uv sync
-uv run python -m app.main
 ```
 
-You'll need a `.env` at the repo root with `LITELLM_URL` and `API_KEY` set —
-those are the only two this app actually reads (`example.env` in the repo is
-currently empty, don't rely on it). Module form (`-m app.main`) matters — the
-package uses relative imports and will error if run as a plain script.
+Create a `.env` file in the repo root:
 
----
-
-## The project by zone
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│ ZONE 1 — OFFLINE: KM Ingestion                                  │
-├─────────────────────────────────────────────────────────────────┤
-│ ZONE 2 — ONLINE: Chat Turn                                       │
-│   ┌───────────────────────────┐  ┌───────────────────────────┐ │
-│   │ Upper path: System memory │  │ Lower path: Personal memory│ │
-│   └───────────────────────────┘  └───────────────────────────┘ │
-├─────────────────────────────────────────────────────────────────┤
-│ ZONE 3 — Write-back                                              │
-├─────────────────────────────────────────────────────────────────┤
-│ ZONE 4 — NIGHTLY                                                  │
-└─────────────────────────────────────────────────────────────────┘
+```bash
+PINECONE=pcsk_...          # your Pinecone API key
+GOOGLE_API_KEY=...         # Google AI Studio key (used for both embeddings and generation)
+EMBEDDING_MODEL=models/gemini-embedding-001   # optional — this is already the default
 ```
 
-### Zone 1 — Offline: KM Ingestion
+`.env` is gitignored and this repo never reads, prints, or edits it beyond
+loading it at startup — treat those two keys as yours to manage.
 
-Turning company documents into something searchable. **Runs outside the chat
-— never per message.**
+### Try it yourself
 
-| Piece | Status | File |
-|---|---|---|
-| Separate index from personal memory | ✅ Built (Phase 1) | `app/km/index.py`, `app/km/schema.py` |
-| Real chunk/embed/classify/dedup pipeline | ❌ Not built (Phase 3) | `app/km/ingest.py` (stub only) |
-| `doc_uid` + `content_hash` schema | ✅ Built, using the mock corpus's manifest | `app/km/schema.py` |
-| Event-driven + nightly-sweep updates | ❌ Not built (Phase 3) | — |
+```bash
+uv run python code/km_chat.py --user demo
+```
 
-**What exists right now:** a mock company-document corpus at
-[mock_km/](mock_km/) (13 synthetic documents, deliberately containing
-duplicate filenames with different content, and a superseded-document pair —
-see [mock_km/README.md](mock_km/README.md)), and a KM index builder/query
-function that reads it.
+Chat normally. Commands inside the session:
 
-**⚠️ Not wired into the chat yet.** `app/km/index.py` is a standalone module.
-Chatting in `app/main.py` never touches it. Test it directly in Python (see
-below).
-
-### Zone 2 — Online: Chat Turn
-
-**Upper path — System memory (KM retrieval)**
-
-| Piece | Status |
+| Command | Does |
 |---|---|
-| Query understanding, metadata filter | ❌ Not built |
-| Hybrid retrieve (BM25 + dense) | ❌ Not built — current search is naive keyword overlap, a placeholder |
-| Taxonomy prune | ❌ Not built |
-| Cross-encoder reranker | ❌ Not built (Phase 2) — this is what will actually resolve same-title-different-content and superseded-document cases |
-| Freshness multiplier | ❌ Not built (Phase 6) |
+| `/mem` | Show everything memory currently holds about this user |
+| `/end` | End the session now (triggers consolidation on demand, instead of waiting for the next day) |
+| `/reset` | Wipe this user's memory clean |
+| `exit` | Quit |
 
-**Lower path — Personal memory**
+Add `--no-memory` to talk to the plain baseline behavior instead (useful for
+seeing the difference side by side).
 
-| Piece | Status | File |
-|---|---|---|
-| Load `user_profile.md` | ✅ Built (v1) | `app/nodes/loading_userProfiles.py` |
-| Load episodic summary + recent days | ✅ Built (Phase 5) | same file |
-| LLM router over `topics_index.json` | ✅ Built (v1) | `app/nodes/search_TopicIndex.py` |
-| Read matched topic `.md` | ✅ Built (v1) | `app/nodes/specific_topic.py` |
-| Assemble context | ✅ Built (v1 + Phase 5) | `app/nodes/assemble_content.py` |
-| Generate answer | ✅ Built (v1) | `app/nodes/generate_answer.py` |
-
-This whole path is what runs when you actually chat with `app/main.py` today.
-
-### Zone 3 — Write-back
-
-Deciding whether a turn is worth remembering, and where.
-
-| Piece | Status | File |
-|---|---|---|
-| Decide skip / append / create / profile | ✅ Built (v1) | `app/nodes/decision_worth.py` |
-| Append/create topic `.md` | ✅ Built (v1) | `app/nodes/append_md.py`, `app/nodes/create_md.py` |
-| Update `user_profile.md`, tagged `(direct)` | ✅ Built (v1 + Phase 5 tagging) | `app/nodes/update_UserProfile.py` |
-| Append to episodic log | ✅ Built (Phase 5) — runs **in addition to** whichever of the above ran, on every non-skip turn | `app/nodes/append_episodic.py` |
-
-**⚠️ Known gap vs. the target design:** this currently runs **synchronously**
-— you wait for the write before you see the answer. The target architecture
-calls for this to be async (off the critical path). Not yet done.
-
-### Zone 4 — Nightly
-
-Consolidating the day's activity. **A standalone script — not a graph node,
-does not run per chat turn.**
-
-| Piece | Status | File |
-|---|---|---|
-| Daily summary → global summary | ✅ Built (Phase 5) | `app/jobs/nightly_consolidate.py` |
-| Aggregate → `user_profile.md` Recurring Interests, tagged `(inferred)` | ✅ Built (Phase 5), with a threshold guard against inferring from a single mention | same file |
-| Recompute KM `freshness_score` | ❌ Not built (Phase 6) — needs Zone 1's real ingestion first | — |
-
-Run it by hand:
+### Run the tests
 
 ```bash
-uv run python -m app.jobs.nightly_consolidate
+uv run python test/test_user_isolation.py
 ```
+
+No network calls — checks that one user's memory can never leak into another
+user's answers.
+
+### Reproduce the benchmark
+
+Running the full benchmark calls Pinecone and Gemini for real, so it takes a
+few minutes and isn't free. Two repos are involved: this one, and the
+[baseline repo](https://github.com/Nattawat1409/AI-KM-Agent_BaseCase), which
+needs to be cloned separately and pointed at the same evalset file.
+
+```bash
+# kill-switch check first — with memory off, this must reproduce
+# the baseline's numbers exactly (confirms "retrieval identical on 17/17")
+MEMORY_ENABLED=false uv run python test/eval/run_benchmark.py
+
+# the real run, with memory on
+uv run python test/eval/run_benchmark.py
+
+# score both systems against each other
+uv run python test/eval/score_benchmark.py \
+  --baseline <path to the baseline repo's results file> \
+  --personalize <path to the .jsonl this repo just produced>
+```
+
+`score_benchmark.py` refuses to compare two runs if their retrieval config,
+prompt, models, or evalset don't match exactly — that guard is what makes the
+result trustworthy rather than a coincidence of two different setups.
 
 ---
 
-## Manual testing, by zone
+## What's in here
 
-### Testing Zone 2 (lower path) + Zone 3 — the part that actually runs today
-
-```bash
-uv run python -m app.main
+```
+code/                       the app itself
+  config/, tools/general/   retrieval config and helpers — kept byte-identical to the baseline
+  nodes/general/            baseline prompt + query-language helpers — also kept identical
+  service/graph_llm.py      baseline answer flow, with one hook where memory gets injected
+  service/memory_service.py     read memory → answer → write memory back
+  service/memory_consolidation.py   the "nightly" summarisation step
+  repository/memory_repository.py   reads/writes each user's memory files on disk
+  nodes/memory/             the small model calls memory needs (routing, deciding what to keep)
+  km_chat.py                talk to it yourself
+test/
+  eval/                     the benchmark: evalset, runner, scorer, results
+  test_user_isolation.py    memory isolation tests
+data/memory/users/<id>/     where a user's memory actually lives (gitignored — created at runtime)
+docs/                       design history and the target (v2) architecture for Cimie
 ```
 
-Type a question, read the answer, then read the `--- memory ---` block
-underneath it — every node appends one line there explaining what it did.
-That block is your main debugging tool; read it before assuming something's
-broken.
-
-**Things worth trying:**
-- Ask about a topic, then a related follow-up — check whether it appended to
-  the same file or created a sibling one (`ls app/memory/business_logic/` etc.)
-- Say something like *"I prefer short answers"* — check it shows up in
-  `app/memory/user_profile.md` tagged `(direct)`, immediately, not after a delay
-- **The real test — kill the process and restart it.** Ask *"what have we
-  discussed today?"* — it should recall correctly using only what's on disk,
-  since the old process's memory is gone. If this works, the core concept is
-  proven.
-- Say something small-talk-y like *"thanks!"* — check the trace shows
-  `action=skip` and no new file was written
-
-### Testing Zone 1 — the KM index (not reachable via chat yet)
-
-```bash
-uv run python -c "
-from app.km.index import build_index, query_index
-print('indexed:', build_index(), 'chunks')
-for r in query_index('weigh hopper tolerance cement')[:3]:
-    print(r['doc_uid'], r['department'], r['title'])
-"
-```
-
-Check `mock_km/README.md` for the specific test queries the corpus was built
-to support (duplicate titles, a superseded document pair) and what each
-should return.
-
-### Testing Zone 4 — the nightly job
-
-```bash
-uv run python -m app.jobs.nightly_consolidate
-```
-
-Run it after a few days of real chat activity (or after backdating a couple
-of `app/memory/episodic/YYYY-MM-DD.md` files for testing — see the file format
-in `docs/PLAN-v2.md` §6). Then check:
-- `app/memory/episodic/summary.md` — did it pick up new daily digests?
-- `app/memory/user_profile.md` — did a `Recurring Interests` line appear,
-  tagged `(inferred)`, *only* if the same subject came up on 3+ distinct days?
-
-**The one test that matters most here:** ask about something **once**, run the
-job, and confirm **no** Recurring Interests line was added. If one appears
-from a single mention, the threshold guard is broken.
+A user's memory is just files: a `user_profile.md`, an index of topics with
+one `.md` per topic, and a dated log under `episodic/`. Nothing here needs a
+database — reading a repo's `data/memory/users/<id>/` folder tells you
+exactly what the assistant "knows" about that person.
 
 ---
 
-## Where to go deeper
+## Honest limitations
 
-| Question | Read |
-|---|---|
-| How does the v1 flow work, node by node? | [docs/design.md](docs/design.md), [docs/PLAN.md](docs/PLAN.md) |
-| What's the target v2 architecture and why? | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) |
-| What's the build order and acceptance criteria for v2? | [docs/PLAN-v2.md](docs/PLAN-v2.md) |
-| What's in the mock company-document corpus? | [mock_km/README.md](mock_km/README.md) |
+- Tested on one scripted user, 22 turns, one knowledge-base domain (Thai
+  cement/manufacturing). Treat the numbers above as a signal, not proof.
+- Cross-session recall and wrong-memory rate are measured off very few
+  questions per run — they swing more between runs than win-rate or Recall@8
+  do. See the "did it get lucky" table above before quoting a single number.
+- Memory adds latency: answering takes longer than the baseline (memory has
+  to be read before answering), and writing the memory update back after
+  answering adds more time on top of that.
+- Memory is injected by adding a note to the same system prompt the baseline
+  uses, with explicit instructions on how it relates to the baseline's "only
+  answer from the retrieved context" rule. Whether that counts as "just
+  memory" or as also being a small prompt change is a fair question — flagged
+  here rather than glossed over.
